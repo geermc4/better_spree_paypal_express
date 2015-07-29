@@ -26,12 +26,12 @@ module Spree
       provider_class.new
     end
 
-    def auto_capture?
-      true
-    end
-
     def method_type
       'paypal'
+    end
+
+    def authorize(amount, express_checkout, gateway_options={})
+      purchase(amount, express_checkout, gateway_options={})
     end
 
     def purchase(amount, express_checkout, gateway_options={})
@@ -42,7 +42,7 @@ module Spree
 
       pp_request = provider.build_do_express_checkout_payment({
         :DoExpressCheckoutPaymentRequestDetails => {
-          :PaymentAction => "Sale",
+          :PaymentAction => auto_capture? ? "Sale" : "Authorization",
           :Token => express_checkout.token,
           :PayerID => express_checkout.payer_id,
           :PaymentDetails => pp_details_response.get_express_checkout_details_response_details.PaymentDetails

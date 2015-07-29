@@ -143,7 +143,7 @@ module Spree
           :ShipToAddress => address_options,
           :PaymentDetailsItem => items,
           :ShippingMethod => "Shipping Method Name Goes Here",
-          :PaymentAction => "Sale"
+          :PaymentAction => payment_method.auto_capture? ? "Sale" : "Authorization",
         }
       end
     end
