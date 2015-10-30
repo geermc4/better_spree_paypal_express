@@ -5,12 +5,7 @@ module Spree
       order = current_order || raise(ActiveRecord::RecordNotFound)
       items = order.line_items.map(&method(:line_item))
 
-      additional_adjustments = order.all_adjustments.additional
-      tax_adjustments = additional_adjustments.tax
-      shipping_adjustments = additional_adjustments.shipping
-
-      additional_adjustments.eligible.each do |adjustment|
-        next if (tax_adjustments + shipping_adjustments).include?(adjustment)
+      order.all_adjustments.additional.nontax.eligible.each do |adjustment|
         items << {
           :Name => adjustment.label,
           :Quantity => 1,
@@ -130,7 +125,8 @@ module Spree
           },
           :ItemTotal => {
             :currencyID => current_order.currency,
-            :value => current_order.item_total
+            #Adjustments are included as items, item sum must match item total
+            :value => current_order.item_total + current_order.all_adjustments.additional.nontax.eligible.map(&:amount).inject(&:+)
           },
           :ShippingTotal => {
             :currencyID => current_order.currency,
