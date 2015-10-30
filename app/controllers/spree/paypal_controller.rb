@@ -5,7 +5,7 @@ module Spree
       order = current_order || raise(ActiveRecord::RecordNotFound)
       items = order.line_items.map(&method(:line_item))
 
-      order.all_adjustments.additional.nontax.eligible.each do |adjustment|
+      adjustments(order).each do |adjustment|
         items << {
           :Name => adjustment.label,
           :Quantity => 1,
@@ -126,7 +126,7 @@ module Spree
           :ItemTotal => {
             :currencyID => current_order.currency,
             #Adjustments are included as items, item sum must match item total
-            :value => current_order.item_total + current_order.all_adjustments.additional.nontax.eligible.map(&:amount).inject(&:+)
+            :value => current_order.item_total + adjustment_total(current_order)
           },
           :ShippingTotal => {
             :currencyID => current_order.currency,
@@ -165,6 +165,15 @@ module Spree
 
     def address_required?
       payment_method.preferred_solution.eql?('Sole')
+    end
+
+    def adjustments(order)
+      order.all_adjustments.additional.nontax.eligible
+    end
+
+    def adjustment_total(order)
+      return 0 if adjustments(order).empty?
+      adjustments(order).map(&:amount).inject(&:+)
     end
   end
 end
