@@ -40,12 +40,17 @@ module Spree
       })
       pp_details_response = provider.get_express_checkout_details(pp_details_request)
 
+      pp_response_details = pp_details_response.get_express_checkout_details_response_details.PaymentDetails
+
+      order = Spree::Order.friendly.find(pp_response_details.first.invoice_id)
+      order.after_paypal_express(express_checkout.payer_id) if order.respond_to?(:after_paypal_express)
+
       pp_request = provider.build_do_express_checkout_payment({
         :DoExpressCheckoutPaymentRequestDetails => {
           :PaymentAction => auto_capture? ? "Sale" : "Authorization",
           :Token => express_checkout.token,
           :PayerID => express_checkout.payer_id,
-          :PaymentDetails => pp_details_response.get_express_checkout_details_response_details.PaymentDetails
+          :PaymentDetails => pp_response_details
         }
       })
 
