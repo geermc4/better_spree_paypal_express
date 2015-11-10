@@ -56,7 +56,7 @@ module Spree
         session[:order_id] = nil
         redirect_to completion_route(order)
       else
-        redirect_to checkout_state_path(order.state)
+        redirect_to checkout_state_path(order.state), flash: { error: Spree.t('flash.generic_error', scope: 'paypal', reasons: '') }
       end
     end
 
